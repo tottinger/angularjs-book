@@ -14,6 +14,10 @@ bmApp.config(function ($routeProvider){
 			templateUrl: 'templates/book_list.html',
 			controller: 'AdminBookListCtrl'
 		})
+		.when('/admin/books/new', {
+			templateUrl: 'templates/admin/book_form.html',
+			controller: 'AdminNewBookCtrl'
+		})
 		.otherwise({
 			redirectTo: '/books'
 		});
