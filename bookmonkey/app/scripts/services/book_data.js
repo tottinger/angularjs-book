@@ -12,7 +12,10 @@
             publisher   : {
                 name: 'dpunkt.verlag',
                 url : 'http://dpunkt.de'
-            }
+            },
+			tags 		: [
+				'javascript', 'enterprise', 'nodejs', 'web', 'browser'
+			]
         },
         {
             title       : 'Node.js & Co.',
@@ -24,7 +27,10 @@
             publisher   : {
                 name: 'dpunkt.verlag',
                 url : 'http://dpunkt.de'
-            }
+            },
+			tags 		: [
+				'javascript', 'nodejs', 'web', 'realtime', 'socketio'
+			]
         },
         {
             title       : 'CoffeeScript',
@@ -36,7 +42,10 @@
             publisher   : {
                 name: 'dpunkt.verlag',
                 url : 'http://dpunkt.de'
-            }
+            },
+			tags 		: [
+				'coffeescript', 'web'
+			]
         }
     ];
 	
@@ -79,6 +88,21 @@
 		}
 	};
 	
+	srv.getTags = function(){
+		var obj = {},
+			tag;
+		
+		for (var i = 0, n = srv._books.length; i < n; i++){
+			for (var j = 0, m = srv._books[i].tags.length; j < m; j++){
+				tag = srv._books[i].tags[j];
+				if(!obj.hasOwnProperty(tag)){
+					obj[tag] = true;
+				}
+			}
+		}
+		return Object.keys(obj);
+	};
+	
 	// Public API
 	return{
 		getBookByIsbn: function(isbn){
@@ -95,6 +119,9 @@
 		},
 		deleteBookByIsbn: function(isbn){
 			srv.deleteBookByIsbn(isbn);
-		}
+		},
+		getTags: function(){
+			return srv.getTags();
+		},
 	};
 });
