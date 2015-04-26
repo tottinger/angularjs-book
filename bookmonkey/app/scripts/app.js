@@ -18,6 +18,14 @@ bmApp.config(function ($routeProvider){
 			templateUrl: 'templates/admin/book_form.html',
 			controller: 'AdminNewBookCtrl'
 		})
+		.when('/admin/books/:isbn/edit', {
+			templateUrl: 'templates/admin/book_form.html',
+			controller: 'AdminEditBookCtrl'
+		})
+		.when('/admin/books/:isbn/delete', {
+			templateUrl: 'templates/admin/book_delete.html',
+			controller: 'AdminDeleteBookCtrl'
+		})
 		.otherwise({
 			redirectTo: '/books'
 		});
