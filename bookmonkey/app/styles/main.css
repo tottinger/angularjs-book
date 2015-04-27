@@ -1,4 +1,8 @@
-﻿.split-screen {
+﻿.bm-content {
+    padding: 10px;
+}
+
+.split-screen {
     display: inline-block;
     box-sizing: border-box;
     vertical-align: top;
@@ -23,4 +27,14 @@ form input.ng-invalid:focus {
 
 form input.ng-valid.ng-dirty {
     background-color: #1dca07;
+}
+
+.bm-tag {
+    font-family: 'Consolas', monospace;
+    font-size: 0.9em;
+    background-color: #276dff;
+    color: #ffffff;
+    margin: 2px;
+    padding: 2px;
+    border-radius: 8px;
 }
