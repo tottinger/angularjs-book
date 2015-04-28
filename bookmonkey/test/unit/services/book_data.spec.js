@@ -1,13 +1,49 @@
 ﻿describe('Service: BookDataService', function(){
-	var BookDataService;
+	var baseUrl = 'http://localhost:4730';
+
+	var BookDataService,
+		$httpBackend;
 	
 	// load the application module
 	beforeEach(module('bmApp'));
 	
 	// get a reference to the service
-	beforeEach(inject(function (_BookDataService_){
+	beforeEach(inject(function (_BookDataService_, _$httpBackend_){
 		BookDataService = _BookDataService_;
+		$httpBackend = _$httpBackend_;
 	}));
+
+	// define trained responses
+	beforeEach(function() {
+		$httpBackend.when(
+			'GET', baseUrl + '/api/books'
+		).respond(testBooks);
+
+		$httpBackend.when(
+			'GET', baseUrl + '/api/books/' + csBook.isbn
+		).respond(csBook);
+
+		$httpBackend.when(
+			'GET', baseUrl + '/api/books/test'
+		).respond(404, '');
+
+		$httpBackend.when(
+			'POST', baseUrl + '/api/books'
+		).respond(true);
+
+		$httpBackend.when(
+			'PUT', baseUrl + '/api/books/' + csBook.isbn
+		).respond(true);
+
+		$httpBackend.when(
+			'DELETE', baseUrl + '/api/books/' + csBook.isbn
+		).respond(true);
+	});
+
+	afterEach(function(){
+		$httpBackend.verifyNoOutstandingExpectation();
+		$httpBackend.verifyNoOutstandingRequest();
+	});
 	
 	describe('Public API', function(){
 		it('should include a getBookByIsbn() function', function(){
@@ -34,79 +70,134 @@
 	describe('Public API usage', function(){
 		describe('getBookByIsbn()', function(){
 			it('should return a proper book object (valid isbn)', function(){
-				var isbn = '978-3-86490-050-1',
-					book = BookDataService.getBookByIsbn(isbn);
-				expect(book.title).toBe('CoffeeScript');
+				$httpBackend.expectGET(baseUrl + '/api/books/' + csBook.isbn);
+
+				var book;
+
+				BookDataService.getBookByIsbn(csBook.isbn).then(function(res){
+					book = res.data;
+				});
+				$httpBackend.flush();
+
+				expect(book.title).toBe(csBook.title);
 			});
 			
 			it('should return null (invalid isbn)', function(){
-				var isbn = 'test',
-					book = BookDataService.getBookByIsbn(isbn);
-				expect(book).toBeNull();
+				$httpBackend.expectGET(baseUrl + '/api/books/test');
+				var error;
+				BookDataService.getBookByIsbn('test').then(function(res){
+				}, function(err){
+					error = err;
+				});
+				$httpBackend.flush();
+
+				expect(error).toBeDefined();
 			});
 		});
 		
 		describe('getBooks()', function(){
 			it('should return a proper array of book objects', function(){
-				var books = BookDataService.getBooks();
-				expect(books.length).toBe(3);
+				$httpBackend.expectGET(baseUrl + '/api/books');
+				var books;
+				BookDataService.getBooks().then(function(res){
+					books = res.data;
+				});
+				$httpBackend.flush();
+
+				expect(books.length).toBe(testBooks.length);
 			});
 		});
 		
 		describe('storeBook()', function(){
 			it('should properly store the passed book object', function(){
-				var beforeCount = BookDataService.getBooks().length;
-				
-				var book = storeExampleBook();
-				
-				expect(BookDataService.getBooks().length).toBe(beforeCount + 1);
-				
-				expect(BookDataService.getBookByIsbn(book.isbn)).not.toBeNull();
+				$httpBackend.expectPOST(
+					baseUrl + '/api/books', effectiveJsBook
+				);
+
+				BookDataService.storeBook(effectiveJsBook);
+				$httpBackend.flush();
 			});
 		});
 		
 		describe('updateBook()', function(){
 			it('should properly update the book object', function(){
-				
-				var book = storeExampleBook();
-				
-				book.abstract = 'TEST';
-				
-				BookDataService.updateBook(book);
-				
-				expect(BookDataService.getBookByIsbn(book.isbn).abstract).toBe(book.abstract);
+				$httpBackend.expectPUT(baseUrl + '/api/books/' + csBook.isbn, csBook);
+
+				BookDataService.updateBook(csBook);
+				$httpBackend.flush();
 			});
 		});
 		
 		describe('deleteBookByIsbn()', function(){
 			it('should properly delete the book object with the passed isbn', function(){
-				
-				var book = storeExampleBook();
-				
-				BookDataService.deleteBookByIsbn(book.isbn);
-				
-				expect(BookDataService.getBookByIsbn(book.isbn)).toBeNull();
+				$httpBackend.expectDELETE(baseUrl + '/api/books/' + csBook.isbn);
+				BookDataService.deleteBookByIsbn(csBook.isbn);
+				$httpBackend.flush();
 			});
 		});
 	});
 	
-	// Helper functions
-	var storeExampleBook = function(){
-		var isbn = '978-3-86490-127-0',
-			book = {
-				title : 'JavaScript effektiv',
-				subtitle : '68 Dinge, die ein guter JavaScript-Entwickler wissen sollte',
-				isbn : isbn,
-				abstract: 'Wollen Sie Javascript wirklich beherrschen?',
-				numPages : 240,
-				author : 'David Herman',
-				publisher : {
-					name : 'dpunkt.verlag',
-					url : 'http://dpunkt.de'
-				}
-			};
-		
-		BookDataService.storeBook(book);
-		return book;
+	// Helper objects
+	var effectiveJsBook = {
+		title       : 'JavaScript effektiv',
+		subtitle    : '68 Dinge, die ein guter JavaScript-Entwickler wissen sollte',
+		isbn        : '978-3-86490-127-0',
+		abstract    : 'Wollen Sie JavaScript wirklich beherrschen?',
+		numPages    : 240,
+		author      : 'David Herman',
+		publisher   : {
+			name: 'dpunkt.verlag',
+			url : 'http://dpunkt.de/'
+		}
 	};
+
+	var csBook = {
+		title: 'CoffeeScript',
+		subtitle: 'Einfach JavaScript',
+		isbn: '978-3-86490-050-1',
+		abstract: 'CoffeeScript ist eine junge, kleine Programmiersprache, die nach JavaScript übersetzt wird.',
+		numPages: 200,
+		author: 'Andreas Schubert',
+		publisher: {
+			name: 'dpunkt.verlag',
+			url: 'http://dpunkt.de/'
+		},
+		tags: [
+			'coffeescript', 'web'
+		]
+	};
+
+	var testBooks = [
+		{
+			title: 'JavaScript für Enterprise-Entwickler',
+			subtitle: 'Professionell programmieren im Browser und auf dem Server',
+			isbn: '978-3-89864-728-1',
+			abstract: 'JavaScript ist längst nicht mehr nur für klassische Webprogrammierer interessant.',
+			numPages: 302,
+			author: 'Oliver Ochs',
+			publisher: {
+				name: 'dpunkt.verlag',
+				url: 'http://dpunkt.de/'
+			},
+			tags: [
+				'javascript', 'enterprise', 'nodejs', 'web', 'browser'
+			]
+		},
+		{
+			title: 'Node.js & Co.',
+			subtitle: 'Skalierbare, hochperformante und echtzeitfähige Webanwendungen professionell in JavaScript entwickeln',
+			isbn: '978-3-89864-829-5',
+			abstract: 'Nach dem Webbrowser erobert JavaScript nun auch den Webserver.',
+			numPages: 334,
+			author: 'Golo Roden',
+			publisher: {
+				name: 'dpunkt.verlag',
+				url: 'http://dpunkt.de/'
+			},
+			tags: [
+				'javascript', 'nodejs', 'web', 'realtime', 'socketio'
+			]
+		},
+		csBook
+	];
 });
