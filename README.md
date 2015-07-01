@@ -1,5 +1,5 @@
 <<<<<<< HEAD
-# angularjs-book
+# angularjs-book test
 AngularJS Book
 =======
 angularjs-book-project-bookmonkey
